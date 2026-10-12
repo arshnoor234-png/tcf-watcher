@@ -46,12 +46,14 @@ def push(title, body, priority="urgent"):
 
 def main():
     try:
-        sessions, notices = parse(fetch())
+        page = fetch()
+        sessions, notices = parse(page)
     except Exception as e:
         log(f"error: {e}")
         return
     if not sessions:
-        log("warning: no sessions parsed (page layout may have changed)")
+        title = re.search(r"(?is)<title>(.*?)</title>", page)
+        log(f"warning: no sessions parsed; got {len(page)} bytes, title={title.group(1).strip() if title else None!r}")
         return
     cur = {"sessions": sessions, "notices": notices}
     prev = None
