@@ -1,0 +1,22 @@
+name: TCF date watcher
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 min (GitHub's minimum; runs can be delayed a few minutes)
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: tcf-watch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 tcf_watch.py && cat watch.log 2>/dev/null | tail -5 || true
+      - name: Save state if changed
+        run: |
+          git config user.name "tcf-bot"
+          git config user.email "tcf-bot@users.noreply.github.com"
+          git add state.json
+          git diff --cached --quiet || (git commit -m "update state" && git push)
